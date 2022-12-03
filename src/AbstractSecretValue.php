@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace AndreyRed\SecretValue;
 
 use RuntimeException;
+
 use function fclose;
 use function fopen;
 use function is_resource;
 use function rewind;
 use function stream_get_contents;
+use function trigger_error;
 use function urlencode;
 
-abstract class AbstractSecret implements Secret
+use const E_USER_WARNING;
+
+abstract class AbstractSecretValue implements SecretValue
 {
     private const RESOURCE_OPEN_MODE = 'rb';
 
@@ -35,17 +39,6 @@ abstract class AbstractSecret implements Secret
         $this->value = $resource;
     }
 
-    final public function equalTo(Secret $other): bool
-    {
-        return static::class === $other::class
-            && $this->reveal() === $other->reveal();
-    }
-
-    public function revealable(): bool
-    {
-        return is_resource($this->value);
-    }
-
     final public function reveal(): string
     {
         if (false !== ($revealed = stream_get_contents($this->value))) {
@@ -55,6 +48,17 @@ abstract class AbstractSecret implements Secret
         }
 
         throw new RuntimeException('Failed to restore the secret');
+    }
+
+    public function revealable(): bool
+    {
+        return is_resource($this->value);
+    }
+
+    final public function equalsTo(SecretValue $other): bool
+    {
+        return static::class === $other::class
+            && $this->reveal() === $other->reveal();
     }
 
     final public function __toString(): string
@@ -75,6 +79,8 @@ abstract class AbstractSecret implements Secret
 
     final public function __serialize(): array
     {
+        $this->triggerError('serialize');
+
         return [
             'value' => null,
         ];
@@ -82,6 +88,8 @@ abstract class AbstractSecret implements Secret
 
     final public function __unserialize(array $data): void
     {
+        $this->triggerError('unserialize');
+
         $this->value = null;
     }
 
@@ -97,5 +105,13 @@ abstract class AbstractSecret implements Secret
         if (is_resource($this->value)) {
             fclose($this->value);
         }
+    }
+
+    protected function triggerError(string $actionName): void
+    {
+        trigger_error(
+            sprintf('Trying to %s a secret value of %s', $actionName, static::name()),
+            E_USER_WARNING,
+        );
     }
 }

@@ -6,13 +6,19 @@ namespace AndreyRed\SecretValue;
 
 use JsonSerializable;
 
-interface Secret extends JsonSerializable
+interface SecretValue extends JsonSerializable
 {
+    /** @param non-empty-string $value */
     public function __construct(string $value);
+
+    public static function name(): string;
+
+    /** @return non-empty-string */
+    public function reveal(): string;
 
     public function revealable(): bool;
 
-    public function reveal(): string;
+    public function equalsTo(SecretValue $other): bool;
 
     public function __toString(): string;
 
@@ -22,6 +28,4 @@ interface Secret extends JsonSerializable
     public function __unserialize(array $data): void;
 
     public function __debugInfo(): array;
-
-    public function __destruct();
 }

@@ -7,7 +7,8 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "AndreyRed\\SecretValue\\": "tests"
+      "AndreyRed\\SecretValue\\Test\\": "tests",
+      "AndreyRed\\SecretValue\\Example\\": "examples"
     }
   },
   "require": {

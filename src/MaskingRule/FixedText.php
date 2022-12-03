@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace AndreyRed\SecretValue\MaskingRule;
 
 use AndreyRed\SecretValue\MaskingRule;
-use AndreyRed\SecretValue\Secret;
+use AndreyRed\SecretValue\SecretValue;
 
 class FixedText implements MaskingRule
 {
@@ -14,7 +14,7 @@ class FixedText implements MaskingRule
         private readonly string $text,
     ) {}
 
-    public function mask(Secret $secret): string
+    public function mask(SecretValue $secret): string
     {
         return $this->text;
     }
