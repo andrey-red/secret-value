@@ -1,0 +1,20 @@
+{
+  "type": "library",
+  "autoload": {
+    "psr-4": {
+      "AndreyRed\\SecretValue\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "AndreyRed\\SecretValue\\": "tests"
+    }
+  },
+  "require": {
+    "php": "^8.1"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^1.9",
+    "phpunit/phpunit": "^9.5"
+  }
+}
