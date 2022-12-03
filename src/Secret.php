@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace AndreyRed\SecretValue;
 
-interface Secret
+use JsonSerializable;
+
+interface Secret extends JsonSerializable
 {
     public function __construct(string $value);
 

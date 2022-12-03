@@ -62,6 +62,12 @@ abstract class AbstractSecret implements Secret
         return $this->getMaskingRule()->mask($this);
     }
 
+    final public function jsonSerialize(): string
+    {
+        return (string) $this;
+    }
+
+
     private function __clone()
     {
         // what do you want to clone the secret for?
