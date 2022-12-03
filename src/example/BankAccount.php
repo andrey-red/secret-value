@@ -11,6 +11,6 @@ class BankAccount extends AbstractSecret
 {
     protected function getMaskingRule(): MaskingRule
     {
-        return new MaskingRule\FixedLength(8);
+        return new MaskingRule\FixedLengthMask(8);
     }
 }

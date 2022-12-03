@@ -11,6 +11,6 @@ class Passport extends AbstractSecret
 {
     protected function getMaskingRule(): MaskingRule
     {
-        return new MaskingRule\FixedLength();
+        return new MaskingRule\FixedLengthMask();
     }
 }

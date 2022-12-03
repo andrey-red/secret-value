@@ -8,7 +8,7 @@ use AndreyRed\SecretValue\MaskingRule;
 use AndreyRed\SecretValue\Secret;
 use function str_repeat;
 
-class FixedLength implements MaskingRule
+class FixedLengthMask implements MaskingRule
 {
     public function __construct(
         private readonly int $length = 5,
