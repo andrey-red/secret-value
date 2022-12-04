@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace AndreyRed\SecretValue;
 
-use RuntimeException;
-
+use function error_get_last;
 use function fclose;
 use function fopen;
 use function is_resource;
@@ -16,7 +15,7 @@ use function urlencode;
 
 use const E_USER_WARNING;
 
-abstract class AbstractSecretValue implements SecretValue
+abstract class AbstractSecret implements Secret
 {
     private const RESOURCE_OPEN_MODE = 'rb';
 
@@ -33,7 +32,14 @@ abstract class AbstractSecretValue implements SecretValue
         );
 
         if ($resource === false) {
-            throw new RuntimeException('Failed to create the secret');
+            $errorReason = (null !== ($error = error_get_last()))
+                ? $error['message']
+                : null;
+
+            throw new Exception\RuntimeException(sprintf(
+                'Failed to create the secret: %s',
+                $errorReason ?: 'unknown reason'
+            ));
         }
 
         $this->value = $resource;
@@ -41,13 +47,17 @@ abstract class AbstractSecretValue implements SecretValue
 
     final public function reveal(): string
     {
-        if (false !== ($revealed = stream_get_contents($this->value))) {
-            rewind($this->value);
-
-            return (string) $revealed;
+        if (!is_resource($this->value)) {
+            throw new Exception\RuntimeException('The secret has no value. Was the secret deserialized?');
         }
 
-        throw new RuntimeException('Failed to restore the secret');
+        rewind($this->value);
+
+        if (false === ($revealed = stream_get_contents($this->value))) {
+            throw new Exception\RuntimeException('Failed to restore the secret');
+        }
+
+        return (string) $revealed;
     }
 
     public function revealable(): bool
@@ -55,7 +65,7 @@ abstract class AbstractSecretValue implements SecretValue
         return is_resource($this->value);
     }
 
-    final public function equalsTo(SecretValue $other): bool
+    final public function equalsTo(Secret $other): bool
     {
         return static::class === $other::class
             && $this->reveal() === $other->reveal();
@@ -71,28 +81,30 @@ abstract class AbstractSecretValue implements SecretValue
         return (string) $this;
     }
 
-
     private function __clone()
     {
         // what do you want to clone the secret for?
     }
 
+    /** @return array<string, mixed> */
     final public function __serialize(): array
     {
-        $this->triggerError('serialize');
+        $this->emitSerializationError('serialize');
 
         return [
             'value' => null,
         ];
     }
 
+    /** @param array<string, mixed> $data */
     final public function __unserialize(array $data): void
     {
-        $this->triggerError('unserialize');
+        $this->emitSerializationError('unserialize');
 
         $this->value = null;
     }
 
+    /** @return array{value: string} */
     final public function __debugInfo(): array
     {
         return [
@@ -107,11 +119,16 @@ abstract class AbstractSecretValue implements SecretValue
         }
     }
 
-    protected function triggerError(string $actionName): void
+    protected function getSerializationErrorLevel(): int
+    {
+        return E_USER_WARNING;
+    }
+
+    protected function emitSerializationError(string $action): void
     {
         trigger_error(
-            sprintf('Trying to %s a secret value of %s', $actionName, static::name()),
-            E_USER_WARNING,
+            "Trying to {$action} a secret value of " . static::name(),
+            $this->getSerializationErrorLevel(),
         );
     }
 }

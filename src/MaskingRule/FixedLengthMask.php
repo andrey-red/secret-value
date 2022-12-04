@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace AndreyRed\SecretValue\MaskingRule;
 
 use AndreyRed\SecretValue\MaskingRule;
-use AndreyRed\SecretValue\SecretValue;
+use AndreyRed\SecretValue\Secret;
 use function str_repeat;
 
 class FixedLengthMask implements MaskingRule
@@ -15,7 +15,7 @@ class FixedLengthMask implements MaskingRule
         private readonly string $symbol = '*',
     ) {}
 
-    public function mask(SecretValue $secret): string
+    public function mask(Secret $secret): string
     {
         return str_repeat($this->symbol, $this->length);
     }

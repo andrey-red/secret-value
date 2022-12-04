@@ -6,5 +6,5 @@ namespace AndreyRed\SecretValue;
 
 interface MaskingRule
 {
-    public function mask(SecretValue $secret): string;
+    public function mask(Secret $secret): string;
 }

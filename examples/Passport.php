@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace AndreyRed\SecretValue\Example;
 
-use AndreyRed\SecretValue\AbstractSecretValue;
+use AndreyRed\SecretValue\AbstractSecret;
 use AndreyRed\SecretValue\MaskingRule;
 
-class Passport extends AbstractSecretValue
+class Passport extends AbstractSecret
 {
     public static function name(): string
     {
