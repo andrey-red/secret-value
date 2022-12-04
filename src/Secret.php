@@ -13,10 +13,10 @@ interface Secret extends JsonSerializable
 
     public static function name(): string;
 
+    public function revealable(): bool;
+
     /** @return string */
     public function reveal(): string;
-
-    public function revealable(): bool;
 
     public function equalsTo(Secret $other): bool;
 
