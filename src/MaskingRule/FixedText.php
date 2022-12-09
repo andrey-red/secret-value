@@ -9,10 +9,10 @@ use AndreyRed\SecretValue\Secret;
 
 class FixedText implements MaskingRule
 {
-
     public function __construct(
         private readonly string $text,
-    ) {}
+    ) {
+    }
 
     public function mask(Secret $secret): string
     {

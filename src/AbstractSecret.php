@@ -4,36 +4,84 @@ declare(strict_types=1);
 
 namespace AndreyRed\SecretValue;
 
-abstract class AbstractSecret extends ExtendableAbstractSecret
+use function error_get_last;
+use function fclose;
+use function fopen;
+use function is_resource;
+use function rewind;
+use function stream_get_contents;
+use function trigger_error;
+use function urlencode;
+
+use const E_USER_WARNING;
+
+abstract class AbstractSecret implements Secret
 {
+    private const RESOURCE_OPEN_MODE = 'rb';
+
+    /** @var resource|null It may become null after unserializing */
+    private $value;
+
+    abstract protected function getMaskingRule(): MaskingRule;
+    abstract protected function assertValueValid(string $value): void;
+
     final public function __construct(string $value)
     {
-        parent::__construct($value);
+        $this->assertValueValid($value);
+
+        $resource = fopen(
+            'data:text/plain,' . urlencode($value),
+            self::RESOURCE_OPEN_MODE
+        );
+
+        if ($resource === false) {
+            $errorReason = (null !== ($error = error_get_last()))
+                ? $error['message']
+                : null;
+
+            throw new Exception\RuntimeException(sprintf(
+                'Failed to create the secret: %s',
+                $errorReason ?: 'unknown reason'
+            ));
+        }
+
+        $this->value = $resource;
     }
 
     final public function reveal(): string
     {
-        return parent::reveal();
+        if (!is_resource($this->value)) {
+            throw new Exception\RuntimeException('The secret has no value. Was the secret deserialized?');
+        }
+
+        rewind($this->value);
+
+        if (false === ($revealed = stream_get_contents($this->value))) {
+            throw new Exception\RuntimeException('Failed to restore the secret');
+        }
+
+        return (string) $revealed;
     }
 
     final public function revealable(): bool
     {
-        return parent::revealable();
+        return is_resource($this->value);
     }
 
     final public function equalsTo(Secret $other): bool
     {
-        return parent::equalsTo($other);
+        return static::class === $other::class
+            && $this->reveal() === $other->reveal();
     }
 
     final public function __toString(): string
     {
-        return parent::__toString();
+        return $this->getMaskingRule()->mask($this);
     }
 
     final public function jsonSerialize(): string
     {
-        return parent::jsonSerialize();
+        return (string) $this;
     }
 
     private function __clone()
@@ -41,23 +89,49 @@ abstract class AbstractSecret extends ExtendableAbstractSecret
         // what do you want to clone the secret for?
     }
 
+    /** @return array<string, mixed> */
     final public function __serialize(): array
     {
-        return parent::__serialize();
+        $this->emitSerializationError('serialize');
+
+        return [
+            'value' => null,
+        ];
     }
 
+    /** @param array<string, mixed> $data */
     final public function __unserialize(array $data): void
     {
-        parent::__unserialize($data);
+        $this->emitSerializationError('unserialize');
+
+        $this->value = null;
     }
 
+    /** @return array{value: string} */
     final public function __debugInfo(): array
     {
-        return parent::__debugInfo();
+        return [
+            'value' => (string) $this,
+        ];
     }
 
     final public function __destruct()
     {
-        parent::__destruct();
+        if (is_resource($this->value)) {
+            fclose($this->value);
+        }
+    }
+
+    protected function getSerializationErrorLevel(): int
+    {
+        return E_USER_WARNING;
+    }
+
+    protected function emitSerializationError(string $action): void
+    {
+        trigger_error(
+            "Trying to {$action} a secret value of " . static::name(),
+            $this->getSerializationErrorLevel(),
+        );
     }
 }

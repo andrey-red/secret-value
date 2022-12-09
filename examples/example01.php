@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace AndreyRed\SecretValue\Example;
 
+use function print_r;
 use function serialize;
 use function unserialize;
+use function var_dump;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-$acc1 = new BankAccount('111');
-$accSame = new BankAccount('111');
-$accAnother = new BankAccount('222');
+$acc1 = new BankAccount('111111111111111');
+$accSame = new BankAccount('111111111111111');
+$accAnother = new BankAccount('222222222222222');
 
 var_export([
     'acc1-obj' => $acc1,
@@ -35,5 +37,10 @@ var_export([
     'acc1=another' => $acc1->equalsTo($accAnother),
 ], false);
 
-$a = unserialize(serialize($acc1), [BankAccount::class]);
+echo "\n\n==== var_dump ====\n\n";
+/** @noinspection ForgottenDebugOutputInspection */
+var_dump($acc1);
 
+echo "\n\n==== print_r ====\n\n";
+/** @noinspection ForgottenDebugOutputInspection */
+print_r($acc1);

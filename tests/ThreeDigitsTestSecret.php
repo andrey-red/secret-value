@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AndreyRed\SecretValue\Example;
+namespace AndreyRed\SecretValue\Test;
 
 use AndreyRed\SecretValue\AbstractSecret;
 use AndreyRed\SecretValue\Exception\InvalidArgumentException;
@@ -10,22 +10,25 @@ use AndreyRed\SecretValue\MaskingRule;
 
 use function preg_match;
 
-class BankAccount extends AbstractSecret
+class ThreeDigitsTestSecret extends AbstractSecret
 {
+    public const MASKED_TEXT = '[secret]';
+    public const WRONG_VALUE_MESSAGE = 'three digits expected';
+
     public static function name(): string
     {
-        return 'Bank Account Number';
+        return 'Test Secret';
     }
 
     protected function getMaskingRule(): MaskingRule
     {
-        return new MaskingRule\FixedLengthMask(8);
+        return new MaskingRule\FixedText(self::MASKED_TEXT);
     }
 
     protected function assertValueValid(string $value): void
     {
-        if (!preg_match('/^\d{12,16}$/', $value)) {
-            throw new InvalidArgumentException(self::name() . ' should be a string containing 12 to 16 digits');
+        if (!preg_match('/^\d+$/', $value)) {
+            throw new InvalidArgumentException(self::WRONG_VALUE_MESSAGE);
         }
     }
 }
